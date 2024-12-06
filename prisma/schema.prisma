@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String           @id @default(cuid())
+  whatsappId   String           @unique // WaId from Twilio
+  name         String? // ProfileName from Twilio
+  phone        String        @unique // From number without "whatsapp:" prefix
+  appointments Appointment[]
+  admin        Admin[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Admin {
+  id           String           @id @default(cuid())
+  name         String
+  mobileNo     String[]
+  email        String
+  whatsapp_id  String?
+  uniqueName   String?      @unique
+  appointments Appointment[]
+  userId       String?
+  User         User?   @relation(fields: [userId], references: [id])
+  created_at   DateTime      @default(now())
+}
+
+model Appointment {
+  id        String   @id @default(cuid())
+  time      String
+  date      DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  status    String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Admin     Admin?   @relation(fields: [adminId], references: [id])
+  adminId   String?
+
+  @@index([userId])
+  @@index([date])
+}
