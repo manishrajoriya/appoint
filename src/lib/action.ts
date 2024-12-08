@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "./prisma";
 import { twilioClient } from "./twilio";
 import { z } from 'zod'
@@ -21,7 +22,7 @@ export async function getOrCreateUser(formData: FormData) {
       data: {
         whatsappId: waId,
         name: profileName,
-        phone: "+91" + phone,
+        phone: phone,
       }
     });
   }
@@ -30,6 +31,96 @@ export async function getOrCreateUser(formData: FormData) {
 }
 
 
+type AdminFormState = {
+  error: {
+    name?: string[]
+    mobileNo?: string[]
+    email?: string[]
+    whatsapp_id?: string[]
+    uniqueName?: string[]
+  }
+  success?: boolean
+  message?: string
+}
+export async function createAdmin(prevState: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  try {
+    const name = formData.get('name') as string
+    const email = formData.get('email') as string
+    const whatsapp_id = formData.get('whatsapp_id') as string
+    const uniqueName = formData.get('uniqueName') as string
+    // console.log(formData);
+    
+    // Get all mobile numbers from form data
+    const mobileNumbers: string[] = []
+    formData.forEach((value, key) => {
+      if (key.startsWith('mobileNo[')) {
+        mobileNumbers.push(value as string)
+      }
+    })
+
+    // Validate inputs
+    if (!name || !email || mobileNumbers.length === 0) {
+      return {
+        error: {
+          name: !name ? ['Name is required'] : undefined,
+          email: !email ? ['Email is required'] : undefined,
+          mobileNo: mobileNumbers.length === 0 ? ['At least one mobile number is required'] : undefined
+        }
+      }
+    }
+    const {userId} = await auth()
+// console.log(userId);
+
+    if (!userId) {
+      return {
+        error: {},
+        success: false,
+        message: "Unauthorized - Please sign in"
+      }
+    }
+    
+  const account = await prisma.account.findUnique({
+      where: {
+        id: userId
+      }
+    })
+    if (!account) {
+      return {
+        error: {},
+        success: false,
+        message: "Unauthorized - Please sign in"
+      }
+    }
+    // Create admin in database
+    const admin = await prisma.admin.create({
+      data: {
+        name,
+        email,
+        mobileNo: mobileNumbers,
+        whatsapp_id: whatsapp_id || null,
+        uniqueName: uniqueName || null,
+        accountId: account.id
+        
+      },
+      
+      
+    })
+
+    return {
+      error: {},
+      success: true,
+      message: "Admin created successfully"
+    }
+
+  } catch (error) {
+    console.error('Failed to create admin:', error)
+    return {
+      error: {
+        name: ['Failed to create admin account']
+      }
+    }
+  }
+}
 
 const ADMIN_PHONE = process.env.ADMIN_WHATSAPP_NUMBER;
 
@@ -91,68 +182,68 @@ const AdminSchema = z.object({
   uniqueName: z.string().min(3, "Unique name must be at least 3 characters").optional(),
 })
 
-type AdminFormState = {
-  error: {
-    name?: string[]
-    mobileNo?: string[]
-    email?: string[]
-    whatsapp_id?: string[]
-    uniqueName?: string[]
-  }
-  success?: boolean
-}
+// type AdminFormState = {
+//   error: {
+//     name?: string[]
+//     mobileNo?: string[]
+//     email?: string[]
+//     whatsapp_id?: string[]
+//     uniqueName?: string[]
+//   }
+//   success?: boolean
+// }
 
-export async function createAdmin(prevState: AdminFormState, formData: FormData): Promise<AdminFormState> {
-  try {
-    const name = formData.get('name') as string
-    const email = formData.get('email') as string
-    const whatsapp_id = formData.get('whatsapp_id') as string
-    const uniqueName = formData.get('uniqueName') as string
+// export async function createAdmin(prevState: AdminFormState, formData: FormData): Promise<AdminFormState> {
+//   try {
+//     const name = formData.get('name') as string
+//     const email = formData.get('email') as string
+//     const whatsapp_id = formData.get('whatsapp_id') as string
+//     const uniqueName = formData.get('uniqueName') as string
     
-    // Get all mobile numbers from form data
-    const mobileNumbers: string[] = []
-    formData.forEach((value, key) => {
-      if (key.startsWith('mobileNo[')) {
-        mobileNumbers.push(value as string)
-      }
-    })
+//     // Get all mobile numbers from form data
+//     const mobileNumbers: string[] = []
+//     formData.forEach((value, key) => {
+//       if (key.startsWith('mobileNo[')) {
+//         mobileNumbers.push(value as string)
+//       }
+//     })
 
-    // Validate inputs
-    if (!name || !email || mobileNumbers.length === 0) {
-      return {
-        error: {
-          name: !name ? ['Name is required'] : undefined,
-          email: !email ? ['Email is required'] : undefined,
-          mobileNo: mobileNumbers.length === 0 ? ['At least one mobile number is required'] : undefined
-        }
-      }
-    }
+//     // Validate inputs
+//     if (!name || !email || mobileNumbers.length === 0) {
+//       return {
+//         error: {
+//           name: !name ? ['Name is required'] : undefined,
+//           email: !email ? ['Email is required'] : undefined,
+//           mobileNo: mobileNumbers.length === 0 ? ['At least one mobile number is required'] : undefined
+//         }
+//       }
+//     }
 
-    // Create admin in database
-    const admin = await prisma.admin.create({
-      data: {
-        name,
-        email,
-        mobileNo: mobileNumbers,
-        whatsapp_id: whatsapp_id || null,
-        uniqueName: uniqueName || null,
-      }
-    })
+//     // Create admin in database
+//     const admin = await prisma.admin.create({
+//       data: {
+//         name,
+//         email,
+//         mobileNo: mobileNumbers,
+//         whatsapp_id: whatsapp_id || null,
+//         uniqueName: uniqueName || null,
+//       }
+//     })
 
-    return {
-      error: {},
-      success: true
-    }
+//     return {
+//       error: {},
+//       success: true
+//     }
 
-  } catch (error) {
-    console.error('Failed to create admin:', error)
-    return {
-      error: {
-        name: ['Failed to create admin account']
-      }
-    }
-  }
-}
+//   } catch (error) {
+//     console.error('Failed to create admin:', error)
+//     return {
+//       error: {
+//         name: ['Failed to create admin account']
+//       }
+//     }
+//   }
+// }
 
 
 
@@ -164,7 +255,7 @@ export async function checkAppointment(appointmentId: string) {
       },
       include: {
         user: true,
-        Admin: {
+        admin: {
           select: {
             id: true,
             name: true,
@@ -187,7 +278,7 @@ export async function checkAppointment(appointmentId: string) {
       error: null,
       status: appointment.status,
       appointment,
-      admin: appointment.Admin?.id
+      admin: appointment.admin?.id
     };
 
   } catch (error) {
@@ -211,7 +302,7 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
       },
       include: {
         user: true,
-        Admin: {
+        admin: {
           select: {
             id: true,
             name: true,
@@ -264,7 +355,7 @@ export async function getAppointmentStatusAndNotify(appointmentId: string) {
     // Format appointment details
     const appointmentDate = appointment.date.toLocaleDateString();
     const appointmentTime = appointment.time;
-    const userName = appointment.user.name || 'Guest';
+    const userName = appointment.user?.name || 'Guest';
 
     // Construct message based on status
     let messageText = `Hello ${userName}!\n\n`;
@@ -285,7 +376,7 @@ export async function getAppointmentStatusAndNotify(appointmentId: string) {
     await client.messages.create({
       body: messageText,
       from: `whatsapp:${process.env.TWILIO_PHONE_NUMBER}`,
-      to: `whatsapp:${appointment.user.phone}`
+      to: `whatsapp:${appointment.user?.phone}`
     });
 
     return {
@@ -338,7 +429,7 @@ export async function connectToAdmin(data: FormData) {
         data: {
           whatsappId: waId!,
           name: profileName,
-          phone: "+91" + phone
+          phone:  phone
         }
       });
       return {
@@ -402,6 +493,49 @@ export async function connectToAdmin(data: FormData) {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to process message'
     };
+  }
+}
+
+export async function upcomingAppointments() {
+  try {
+    const {userId} = await auth()
+console.log(userId);
+
+    if (!userId) {
+      return {
+        error: {},
+         success: false,
+         message: "Unauthorized - Please sign in"
+      }
+    }
+
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        adminId: userId
+      },
+     include: {
+      
+      user: {
+        select: {
+          phone: true,
+          name: true
+        }
+      }
+    }
+  })
+    console.log(appointments);
+    
+    return {
+      success: true,
+      message: "Upcoming appointments fetched successfully",
+      data: appointments
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error,
+      message: "Failed to fetch upcoming appointments"
+    }
   }
 }
 

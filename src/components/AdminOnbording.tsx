@@ -17,7 +17,8 @@ const initialState = {
     whatsapp_id: undefined,
     uniqueName: undefined
   },
-  success: false
+  success: false,
+  message: ''
 }
 
 export default function AdminOnboarding() {

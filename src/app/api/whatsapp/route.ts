@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     console.log('User appointments:', user?.appointments); // Debug log
 
     // If user doesn't exist or isn't connected to an admin
-    if (!user || user.admin.length === 0) {
+    if (!user || user.admin?.id === null) {
       const result = await connectToAdmin(formData);
       messageText = result.message || '';
     } 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       if (body.toLowerCase() === 'hi' || body.toLowerCase() === 'hello' || body.toLowerCase() === 'hey' || body.toLowerCase() === 'hii') {
         if (existingAppointment && existingAppointment.status === 'CONFIRMED') {
           messageText = `Welcome back ${user.name || ''}! You have an existing appointment for ${existingAppointment.time} today.\n\n`;
-          messageText += 'Choose an option:\n1️⃣ Cancel this appointment\n2️⃣ Book a new appointment';
+          messageText += 'Type CANCEL to Cancel this appointment';
         } else {
           // Send available slots with interactive options
           messageText = `Hello ${user.name || ''}! Choose a time for your appointment:\n\n`;
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
             messageText += `${index + 1}️⃣ ${slot}\n`;
           });
         }
-      } else if (body === '1') {
+      } else if (body.toLowerCase() === 'cancel') {
         // Check if there's an appointment to cancel
         if (existingAppointment) {
           try {
@@ -97,9 +97,9 @@ export async function POST(req: NextRequest) {
         } else {
           messageText = '⚠️ No active appointment found to cancel.\nSend "hi" to book an appointment.';
         }
-      } else if (['2', '3', '4'].includes(body)) {
+      } else if (['1', '2', '3', '4'].includes(body)) {
         if (existingAppointment && existingAppointment.status === 'CONFIRMED') {
-          messageText = 'You already have an appointment. Please cancel it first by sending 1️⃣';
+          messageText = 'You already have an appointment. Please cancel it first by typing "CANCEL".';
         } else {
           const selectedTime = availableSlots[parseInt(body) - 1];
           
@@ -109,12 +109,12 @@ export async function POST(req: NextRequest) {
               time: selectedTime,
               date: new Date(),
               userId: user.id,
-              adminId: user.admin[0].id,
+              adminId: user.admin?.id,
               status: 'CONFIRMED'
             },
             include: {
               user: true,
-              Admin: true
+              admin: true
             }
           });
 
@@ -122,14 +122,14 @@ export async function POST(req: NextRequest) {
           messageText += `📅 Date: ${new Date().toLocaleDateString()}\n`;
           messageText += `⏰ Time: ${selectedTime}\n\n`;
           messageText += `Reply with:\n`;
-          messageText += `1️⃣ To cancel this appointment\n`;
+          messageText += `❌ Send "CANCEL" To cancel this appointment\n`;
           messageText += `❓ Send "hi" for more options`;
           
           // Notify admin
           await notifyAdmin(appointment);
         }
       } else if (body === '2' && existingAppointment && existingAppointment.status === 'CONFIRMED') {
-        messageText = '⚠️ Please cancel your existing appointment first by sending 1️⃣';
+        messageText = '⚠️ Please cancel your existing appointment first by typing "CANCEL".';
       } else {
         messageText = 'Please send "hi" to see available options.';
       }
