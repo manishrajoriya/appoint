@@ -7,13 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Account {
-  id        String  @id @default(cuid())
-  name      String
-  email     String
-  mobile    String
-  admin     Admin[]
-}
+
 
 model User {
   id           String           @id @default(cuid())
@@ -33,12 +27,11 @@ model Admin {
   mobileNo       String[]           // Changed from String[]
   email          String
   whatsapp_id    String?
-  availableSlots AvailableSlots[]
   uniqueName     String?          @unique
   appointments   Appointment[]
   user           User[]
-  accountId      String?
-  account        Account?         @relation(fields: [accountId], references: [id])
+  slots          Slot[]
+  adminAvailability AdminAvailability[]
   created_at     DateTime         @default(now())
 }
 
@@ -58,12 +51,27 @@ model Appointment {
   @@index([date])
 }
 
-model AvailableSlots {
-   id       String @id @default(cuid())
-   active   Boolean
-   slots    String[]
-   adminId  String?
-   admin    Admin?  @relation(fields: [adminId], references: [id])
 
-   @@index([adminId]) // Added index for foreign key
+model AdminAvailability {
+  id        String   @id @default(cuid()) @unique
+  adminId   String
+  dayOfWeek Int      // Represent days as 0 (Sunday) to 6 (Saturday)
+  startTime String   // Store time in 24-hour format, e.g., "09:00"
+  endTime   String   // Store time in 24-hour format, e.g., "17:00"
+  timeSlots String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@unique([adminId, dayOfWeek])
+}
+
+model Slot {
+  id          String      @id @default(cuid())
+  adminId     String
+  admin       Admin    @relation(fields: [adminId], references: [id])
+  startTime   DateTime
+  endTime     DateTime
+  isBooked    Boolean  @default(false)
+  userId      String?     // If booked, reference the user
 }

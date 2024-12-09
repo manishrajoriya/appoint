@@ -11,10 +11,7 @@ import { PlusCircle, Trash2 } from 'lucide-react'
 
 const initialState = {
   error: {
-    name: undefined,
     mobileNo: undefined,
-    email: undefined,
-    whatsapp_id: undefined,
     uniqueName: undefined
   },
   success: false,
@@ -48,11 +45,7 @@ export default function AdminOnboarding() {
         </CardHeader>
         <form action={formAction}>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" required />
-              {state?.error?.name && <p className="text-sm text-red-500">{state.error.name}</p>}
-            </div>
+           
             <div className="space-y-2">
               <Label>Mobile Numbers</Label>
               {mobileNumbers.map((number, index) => (
@@ -76,18 +69,9 @@ export default function AdminOnboarding() {
               </Button>
               {state?.error?.mobileNo && <p className="text-sm text-red-500">{state.error.mobileNo}</p>}
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" required />
-              {state?.error?.email && <p className="text-sm text-red-500">{state.error.email}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp_id">WhatsApp ID (optional)</Label>
-              <Input id="whatsapp_id" name="whatsapp_id" />
-              {state?.error?.whatsapp_id && <p className="text-sm text-red-500">{state.error.whatsapp_id}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="uniqueName">Unique Name (optional)</Label>
+              <Label htmlFor="uniqueName">Appointment ID (Unique)</Label>
               <Input id="uniqueName" name="uniqueName" />
               {state?.error?.uniqueName && <p className="text-sm text-red-500">{state.error.uniqueName}</p>}
             </div>

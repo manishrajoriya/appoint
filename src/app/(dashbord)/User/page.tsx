@@ -1,12 +1,16 @@
+
 import Dashboard from '@/components/Dashbord'
-import AdminTimeSlotsForm from '@/components/Timeslote'
+import DefineAvailability from '@/components/DefineAvailable'
+import AdminAvailability from '@/components/forms/Availability'
+
 import React from 'react'
 
 function page() {
   return (
     <div>
         <Dashboard/>
-        
+        <AdminAvailability/>
+        <DefineAvailability/>
     </div>
   )
 }

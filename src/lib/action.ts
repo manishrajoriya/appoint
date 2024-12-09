@@ -33,10 +33,7 @@ export async function getOrCreateUser(formData: FormData) {
 
 type AdminFormState = {
   error: {
-    name?: string[]
     mobileNo?: string[]
-    email?: string[]
-    whatsapp_id?: string[]
     uniqueName?: string[]
   }
   success?: boolean
@@ -44,9 +41,7 @@ type AdminFormState = {
 }
 export async function createAdmin(prevState: AdminFormState, formData: FormData): Promise<AdminFormState> {
   try {
-    const name = formData.get('name') as string
-    const email = formData.get('email') as string
-    const whatsapp_id = formData.get('whatsapp_id') as string
+
     const uniqueName = formData.get('uniqueName') as string
     // console.log(formData);
     
@@ -59,12 +54,11 @@ export async function createAdmin(prevState: AdminFormState, formData: FormData)
     })
 
     // Validate inputs
-    if (!name || !email || mobileNumbers.length === 0) {
+    if (!uniqueName || mobileNumbers.length === 0) {
       return {
         error: {
-          name: !name ? ['Name is required'] : undefined,
-          email: !email ? ['Email is required'] : undefined,
-          mobileNo: mobileNumbers.length === 0 ? ['At least one mobile number is required'] : undefined
+          mobileNo: mobileNumbers.length === 0 ? ['At least one mobile number is required'] : undefined,
+          uniqueName: !uniqueName ? ['Unique name is required'] : undefined
         }
       }
     }
@@ -79,33 +73,18 @@ export async function createAdmin(prevState: AdminFormState, formData: FormData)
       }
     }
     
-  const account = await prisma.account.findUnique({
-      where: {
-        id: userId
-      }
-    })
-    if (!account) {
-      return {
-        error: {},
-        success: false,
-        message: "Unauthorized - Please sign in"
-      }
-    }
+ 
     // Create admin in database
-    const admin = await prisma.admin.create({
-      data: {
-        name,
-        email,
-        mobileNo: mobileNumbers,
-        whatsapp_id: whatsapp_id || null,
-        uniqueName: uniqueName || null,
-        accountId: account.id
-        
+    const admin = await prisma.admin.update({
+     where: {
+        id: userId
       },
-      
-      
+      data: {
+        mobileNo: mobileNumbers,
+        uniqueName: uniqueName || null,
+        
+      }
     })
-
     return {
       error: {},
       success: true,
@@ -116,21 +95,17 @@ export async function createAdmin(prevState: AdminFormState, formData: FormData)
     console.error('Failed to create admin:', error)
     return {
       error: {
-        name: ['Failed to create admin account']
+        uniqueName: ['Failed to create admin account']
       }
     }
   }
 }
 
-const ADMIN_PHONE = process.env.ADMIN_WHATSAPP_NUMBER;
+
 
 export async function notifyAdmin(appointment: any) {
 
 
-  if (!ADMIN_PHONE) {
-    console.error('Admin phone number not configured');
-    return;
-  }
   // Find connected admin for the appointment
   const admin = await prisma.admin.findFirst({
     where: {
@@ -138,112 +113,36 @@ export async function notifyAdmin(appointment: any) {
     }
   });
 
-  if (!admin) {
+  if (!admin || !admin.mobileNo || admin.mobileNo.length === 0) {
     console.error('Admin not found for appointment');
     return;
   }
 
   // Use admin's mobile numbers for notifications
   for (const mobileNo of admin.mobileNo) {
+    const phoneNumber = mobileNo.startsWith('91') ? mobileNo : `91${mobileNo}`;
     await twilioClient.messages.create({
-      body: `New appointment ${appointment.status}!\n
+      body: appointment.status === 'CONFIRMED' ? `New appointment ${appointment.status}!\n
+      Time: ${appointment.time}
+      Customer: ${appointment.user.name || 'Unknown'} 
+      Phone: ${appointment.user.phone}
+      Date: ${appointment.date.toLocaleDateString()}` : ` Appointment ${appointment.status}!\n
       Time: ${appointment.time}
       Customer: ${appointment.user.name || 'Unknown'} 
       Phone: ${appointment.user.phone}
       Date: ${appointment.date.toLocaleDateString()}`,
       from: process.env.TWILIO_WHATSAPP_NUMBER,
-      to: `whatsapp:+91${mobileNo}`
+      to: `whatsapp:+${phoneNumber}`
     });
   }
 
+
   return;
 
-  await twilioClient.messages.create({
-      body: `appointment ${appointment.status}!\n
-      Time: ${appointment.time}
-      Customer: ${appointment.user.name || 'Unknown'}
-      Phone: ${appointment.user.phone}
-      Date: ${appointment.date.toLocaleDateString()}`,
-      from: process.env.TWILIO_WHATSAPP_NUMBER,
-      to: "whatsapp:+918764296129"
-  });
+  
 }
 
 
-
-
-
-
-const AdminSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  mobileNo: z.array(z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number")).min(1, "At least one mobile number is required"),
-  email: z.string().email("Invalid email address"),
-  whatsapp_id: z.string().optional(),
-  uniqueName: z.string().min(3, "Unique name must be at least 3 characters").optional(),
-})
-
-// type AdminFormState = {
-//   error: {
-//     name?: string[]
-//     mobileNo?: string[]
-//     email?: string[]
-//     whatsapp_id?: string[]
-//     uniqueName?: string[]
-//   }
-//   success?: boolean
-// }
-
-// export async function createAdmin(prevState: AdminFormState, formData: FormData): Promise<AdminFormState> {
-//   try {
-//     const name = formData.get('name') as string
-//     const email = formData.get('email') as string
-//     const whatsapp_id = formData.get('whatsapp_id') as string
-//     const uniqueName = formData.get('uniqueName') as string
-    
-//     // Get all mobile numbers from form data
-//     const mobileNumbers: string[] = []
-//     formData.forEach((value, key) => {
-//       if (key.startsWith('mobileNo[')) {
-//         mobileNumbers.push(value as string)
-//       }
-//     })
-
-//     // Validate inputs
-//     if (!name || !email || mobileNumbers.length === 0) {
-//       return {
-//         error: {
-//           name: !name ? ['Name is required'] : undefined,
-//           email: !email ? ['Email is required'] : undefined,
-//           mobileNo: mobileNumbers.length === 0 ? ['At least one mobile number is required'] : undefined
-//         }
-//       }
-//     }
-
-//     // Create admin in database
-//     const admin = await prisma.admin.create({
-//       data: {
-//         name,
-//         email,
-//         mobileNo: mobileNumbers,
-//         whatsapp_id: whatsapp_id || null,
-//         uniqueName: uniqueName || null,
-//       }
-//     })
-
-//     return {
-//       error: {},
-//       success: true
-//     }
-
-//   } catch (error) {
-//     console.error('Failed to create admin:', error)
-//     return {
-//       error: {
-//         name: ['Failed to create admin account']
-//       }
-//     }
-//   }
-// }
 
 
 
@@ -539,3 +438,61 @@ console.log(userId);
   }
 }
 
+
+export async function saveAvailability( availability: { dayOfWeek: number; startTime: string; endTime: string }[]) {
+  try {
+    const {userId} = await auth()
+console.log(userId);
+
+    if (!userId) {
+      throw new Error("Unauthorized - Please sign in");
+    }
+
+    const admin = await prisma.admin.findUnique({ where: { id: userId } });
+    if (!admin) {
+      throw new Error("Admin not found");
+    }
+    const promises = availability.map((slot) =>
+      prisma.adminAvailability.upsert({
+        where: {
+          adminId_dayOfWeek: { adminId: userId, dayOfWeek: slot.dayOfWeek }, // Compound unique field
+        },
+        update: {
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+        },
+        create: {
+          adminId: userId,
+          dayOfWeek: slot.dayOfWeek,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+        },
+      })
+    );
+    await Promise.all(promises);
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving availability:", error);
+    const { message } = error as Error;
+    throw new Error(message);
+  }
+}
+
+
+export async function fetchAvailability() {
+  try {
+    const { userId } = await auth();
+
+
+    if (!userId) {
+      throw new Error("Unauthorized - Please sign in");
+    }
+    return await prisma.adminAvailability.findMany({
+      where: { adminId: userId },
+      orderBy: { dayOfWeek: "asc" },
+    });
+  } catch (error) {
+    console.error("Error fetching availability:", error);
+    throw new Error("Failed to fetch availability");
+  }
+}

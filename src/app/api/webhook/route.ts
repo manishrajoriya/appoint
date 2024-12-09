@@ -57,12 +57,12 @@ export async function POST(req: Request) {
     const name = userData.username || userData.first_name || 'Unknown'
 
     // Create new admin with minimal fields
-    await prisma.account.create({
+    await prisma.admin.create({
       data: {
         id,
         name,
         email,
-        mobile: '',
+        
       },
     })
 
