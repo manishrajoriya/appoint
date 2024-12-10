@@ -41,7 +41,12 @@ export async function defineAvailability({
   return { success: true };
 }
 
-export async function bookSlot({ slotId, userId }: { slotId: string; userId: string }) {
+export async function bookSlot({ slotId }: { slotId: string }) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized - Please sign in");
+  }
   const slot = await prisma.slot.findUnique({ where: { id: slotId } });
 
   if (!slot || slot.isBooked) {
@@ -57,4 +62,23 @@ export async function bookSlot({ slotId, userId }: { slotId: string; userId: str
   });
 
   return { success: true };
+}
+
+export async function getAllSlots() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized - Please sign in");
+  }
+  const slots = await prisma.slot.findMany({
+    where: { adminId: userId },
+    include: {
+      admin: true, // Include admin details if needed
+    },
+    orderBy: {
+      startTime: "asc",
+    },
+  });
+
+  return slots;
 }

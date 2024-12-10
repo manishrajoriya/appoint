@@ -17,11 +17,11 @@ function BookSlot({ adminId }) {
 
   const handleBooking = async (slotId) => {
     try {
-      await bookSlot({ slotId, userId: 1 }); // Replace 1 with actual user ID
+      await bookSlot({ slotId });
       alert("Slot booked successfully!");
       setSlots(slots.filter((slot) => slot.id !== slotId)); // Optimistically update UI
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      alert(`Error: ${error}`);
     }
   };
 
