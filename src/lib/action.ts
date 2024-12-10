@@ -143,9 +143,6 @@ export async function notifyAdmin(appointment: any) {
 }
 
 
-
-
-
 export async function checkAppointment(appointmentId: string) {
   try {
     const appointment = await prisma.appointment.findUnique({
@@ -294,6 +291,7 @@ export async function getAppointmentStatusAndNotify(appointmentId: string) {
 }
 
 export async function connectToAdmin(data: FormData) {
+
   try {
     // Extract WhatsApp user data
     const waId = data.get('WaId')?.toString();
@@ -351,6 +349,19 @@ export async function connectToAdmin(data: FormData) {
           message: "No admin found with this unique name. Please check and try again."
         };
       }
+       // Fetch available slots for the admin
+      // const slots = await prisma.slot.findMany({
+      //   where: {
+      //     adminId: admin.id,
+      //     isBooked: false, // Assuming there's a field to indicate slot availability
+          
+      //   },
+        
+      // });
+
+      // const slotMessages = slots.map(slot => 
+      //   `${slot.startTime.toLocaleTimeString()} - ${slot.endTime.toLocaleTimeString()} `
+      // );
 
       // Connect user to admin
       await prisma.user.update({
@@ -366,12 +377,15 @@ export async function connectToAdmin(data: FormData) {
         }
       });
 
+     
+
       return {
         success: true,
-        message: "Successfully connected to admin. You can now book appointments by sending 'hi'"
+        message: `Now you can book an appointment with ${admin.name}.\nSend:\n Type 'hi' To book an appointment.`,
       };
     }
-
+      
+  
     // User exists and is connected to admin
     if (user.appointments && user.appointments.length > 0) {
       const appointment = user.appointments[0];
@@ -390,7 +404,7 @@ export async function connectToAdmin(data: FormData) {
     console.error('Failed to process message:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to process message'
+      error: 'An error occurred while processing your request. Please try again later'
     };
   }
 }

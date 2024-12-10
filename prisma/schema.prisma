@@ -72,6 +72,8 @@ model Slot {
   admin       Admin    @relation(fields: [adminId], references: [id])
   startTime   DateTime
   endTime     DateTime
+  date        DateTime?
   isBooked    Boolean  @default(false)
   userId      String?     // If booked, reference the user
+
 }

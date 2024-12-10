@@ -1,137 +1,133 @@
 import { NextRequest, NextResponse } from "next/server";
-import twilio from 'twilio';
-import { prisma } from '@/lib/prisma';
-import { type MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
+import twilio from "twilio";
+import { prisma } from "@/lib/prisma";
 import { connectToAdmin, notifyAdmin } from "@/lib/action";
 
 const { MessagingResponse } = twilio.twiml;
 
-const availableSlots = [
-  '10:00 AM',
-  '12:00 PM',
-  '2:00 PM',
-  '4:00 PM',
-] as const;
-
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const body = formData.get('Body')?.toString().trim() || '';
-    const waId = formData.get('WaId')?.toString() || '';
-    
-    const twiml = new MessagingResponse();
-    let messageText = '';
+    const body = formData.get("Body")?.toString().trim() || "";
+    const waId = formData.get("WaId")?.toString() || "";
 
-    // First, check if user exists and is connected to an admin
+    const twiml = new MessagingResponse();
+    let messageText = "";
+
+    // Fetch user details, including admin and upcoming appointments
     const user = await prisma.user.findUnique({
       where: { whatsappId: waId },
       include: {
-        admin: true,
+        admin: {
+          include: {
+            slots: {
+              where: {
+                isBooked: false, // Fetch only unbooked slots
+               
+              },
+              orderBy: {
+                startTime: "asc",
+              },
+            },
+          },
+        },
         appointments: {
           where: {
             OR: [
               {
                 AND: [
-                  { status: 'CONFIRMED' },
+                  { status: "CONFIRMED" },
                   {
                     date: {
-                      gte: new Date(new Date().setHours(0, 0, 0, 0)) // Start of today
-                    }
-                  }
-                ]
+                      gte: new Date(new Date().setHours(0, 0, 0, 0)), // Start of today
+                    },
+                  },
+                ],
               },
-              { status: 'PENDING' }
-            ]
+              { status: "PENDING" },
+            ],
           },
-          orderBy: { date: 'desc' },
-          take: 1
-        }
-      }
+          orderBy: { date: "desc" },
+          take: 1,
+        },
+      },
     });
 
-    console.log('User appointments:', user?.appointments); // Debug log
-
-    // If user doesn't exist or isn't connected to an admin
-    if (!user || user.admin?.id === null) {
+    if (!user || !user.admin) {
+      // Connect the user to an admin if not already connected
       const result = await connectToAdmin(formData);
-      messageText = result.message || '';
-    } 
-    // User exists and is connected to admin
-    else {
-      // Get the most recent confirmed appointment for today
+      messageText = result.message || "";
+    } else {
       const existingAppointment = user.appointments[0];
-      console.log('Existing appointment:', existingAppointment); // Debug log
 
-      if (body.toLowerCase() === 'hi' || body.toLowerCase() === 'hello' || body.toLowerCase() === 'hey' || body.toLowerCase() === 'hii') {
-        if (existingAppointment && existingAppointment.status === 'CONFIRMED') {
-          messageText = `Welcome back ${user.name || ''}! You have an existing appointment for ${existingAppointment.time} today.\n\n`;
-          messageText += 'Type CANCEL to Cancel this appointment';
-        } else {
-          // Send available slots with interactive options
-          messageText = `Hello ${user.name || ''}! Choose a time for your appointment:\n\n`;
-          availableSlots.forEach((slot, index) => {
-            messageText += `${index + 1}️⃣ ${slot}\n`;
+      if (["hi", "hello", "hey", "hii"].includes(body.toLowerCase())) {
+        // Greet the user and show available slots if no confirmed appointment exists
+        if (existingAppointment && existingAppointment.status === "CONFIRMED") {
+          messageText = `Welcome back, ${user.name || ""}! You have an existing appointment for ${existingAppointment.time} on ${existingAppointment.date.toLocaleDateString()}.\n\nType CANCEL to cancel this appointment.`;
+        } else if (user.admin.slots.length > 0) {
+          // Show available slots
+          messageText = `Hello ${user.name || ""}! Here are the available slots for your admin:\n\n`;
+          user.admin.slots.forEach((slot, index) => {
+            messageText += `${index + 1}️⃣ ${slot.startTime.toLocaleString()} \n`;
           });
+          messageText += "\nReply with the slot number to book.";
+        } else {
+          messageText = `Hello ${user.name || ""}! No available slots at the moment. Please try again later.`;
         }
-      } else if (body.toLowerCase() === 'cancel') {
-        // Check if there's an appointment to cancel
+      } else if (body.toLowerCase() === "cancel") {
+        // Handle appointment cancellation
         if (existingAppointment) {
-          try {
-            // Cancel appointment
-            await prisma.appointment.update({
-              where: { id: existingAppointment.id },
-              data: { status: 'CANCELLED' }
-            });
-            messageText = '❌ Appointment cancelled.\n\nSend "hi" to book a new appointment.';
-            
-            // Notify admin about cancellation
-            await notifyAdmin({
-              ...existingAppointment,
-              status: 'CANCELLED',
-              user: user
-            });
-          } catch (error) {
-            console.error('Error cancelling appointment:', error);
-            messageText = '⚠️ Failed to cancel appointment. Please try again.';
-          }
+          await prisma.appointment.update({
+            where: { id: existingAppointment.id },
+            data: { status: "CANCELLED" },
+          });
+          messageText = `❌ Appointment cancelled. Send "hi" to book a new appointment.`;
+
+          // Notify the admin
+          await notifyAdmin({
+            ...existingAppointment,
+            status: "CANCELLED",
+            user,
+          });
         } else {
-          messageText = '⚠️ No active appointment found to cancel.\nSend "hi" to book an appointment.';
+          messageText = `⚠️ No active appointment found to cancel. Send "hi" to book an appointment.`;
         }
-      } else if (['1', '2', '3', '4'].includes(body)) {
-        if (existingAppointment && existingAppointment.status === 'CONFIRMED') {
-          messageText = 'You already have an appointment. Please cancel it first by typing "CANCEL".';
+      } else if (!isNaN(parseInt(body))) {
+        // Book an appointment based on slot number
+        const slotIndex = parseInt(body) - 1;
+        const selectedSlot = user.admin.slots[slotIndex];
+
+        if (!selectedSlot) {
+          messageText = `⚠️ Invalid slot selection. Please reply with a valid number.`;
+        } else if (existingAppointment && existingAppointment.status === "CONFIRMED") {
+          messageText = `⚠️ You already have a confirmed appointment. Please cancel it first by typing "CANCEL".`;
         } else {
-          const selectedTime = availableSlots[parseInt(body) - 1];
-          
-          // Create new appointment
           const appointment = await prisma.appointment.create({
             data: {
-              time: selectedTime,
-              date: new Date(),
+              time: selectedSlot.startTime.toLocaleTimeString(),
+              date: selectedSlot.startTime,
               userId: user.id,
-              adminId: user.admin?.id,
-              status: 'CONFIRMED'
+              adminId: user.admin.id,
+              status: "CONFIRMED",
             },
-            include: {
-              user: true,
-              admin: true
-            }
           });
 
-          messageText = `✅ Appointment confirmed!\n\n`;
-          messageText += `📅 Date: ${new Date().toLocaleDateString()}\n`;
-          messageText += `⏰ Time: ${selectedTime}\n\n`;
-          messageText += `Reply with:\n`;
-          messageText += `❌ Send "CANCEL" To cancel this appointment\n`;
-          messageText += `❓ Send "hi" for more options`;
-          
-          // Notify admin
-          await notifyAdmin(appointment);
+          await prisma.slot.update({
+            where: { id: selectedSlot.id },
+            data: { isBooked: true },
+          });
+
+          messageText = `✅ Appointment confirmed!\n\n📅 Date: ${selectedSlot.endTime.toLocaleDateString()}\n⏰ Time: ${selectedSlot.startTime.toLocaleTimeString()}\n\nReply with:\n❌ "CANCEL" to cancel this appointment\n❓ "hi" for more options.`;
+
+          // Notify the admin
+          await notifyAdmin({
+            ...appointment,
+            status: "CONFIRMED",
+            user,
+          });
         }
-      } else if (body === '2' && existingAppointment && existingAppointment.status === 'CONFIRMED') {
-        messageText = '⚠️ Please cancel your existing appointment first by typing "CANCEL".';
       } else {
-        messageText = 'Please send "hi" to see available options.';
+        messageText = `Please send "hi" to see available options.`;
       }
     }
 
@@ -139,21 +135,16 @@ export async function POST(req: NextRequest) {
 
     return new NextResponse(twiml.toString(), {
       status: 200,
-      headers: {
-        'Content-Type': 'text/xml',
-      },
+      headers: { "Content-Type": "text/xml" },
     });
-
   } catch (error) {
-    console.error('Error processing message:', error);
+    console.error("Error processing message:", error);
     const twiml = new MessagingResponse();
-    twiml.message('❌ Sorry, something went wrong. Please try again later.');
+    twiml.message("❌ Sorry, something went wrong. Please try again later.");
 
     return new NextResponse(twiml.toString(), {
       status: 500,
-      headers: {
-        'Content-Type': 'text/xml',
-      },
+      headers: { "Content-Type": "text/xml" },
     });
   }
 }

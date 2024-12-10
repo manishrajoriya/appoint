@@ -12,9 +12,10 @@ export default function Layout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
+    
       <html lang="en">
-        <body>
+        <ClerkProvider>
+        <body suppressHydrationWarning={true}>
           <SignedOut>
             <SignInButton />
           </SignedOut>
@@ -23,7 +24,8 @@ export default function Layout({
           </SignedIn>
           {children}
         </body>
+        </ClerkProvider>
       </html>
-     </ClerkProvider>
+     
   )
 }
