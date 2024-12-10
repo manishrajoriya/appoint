@@ -2,6 +2,8 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar, Clock, MessageCircle, Phone, Send, User } from 'lucide-react'
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs"
+import { Sign } from "crypto"
 
 export default function WhatsAppBookingLanding() {
   return (
@@ -12,14 +14,19 @@ export default function WhatsAppBookingLanding() {
           <span className="sr-only">Acme Booking Inc</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#features">
-            Features
+          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/User">
+            Get Started
           </Link>
           <Link className="text-sm font-medium hover:underline underline-offset-4" href="#how-it-works">
             How It Works
           </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#cta">
-            Get Started
+          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/User">
+            <SignedOut>
+            <SignInButton />
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
           </Link>
         </nav>
       </header>

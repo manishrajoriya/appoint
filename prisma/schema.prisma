@@ -15,6 +15,7 @@ model User {
   name         String?          // ProfileName from Twilio
   phone        String           @unique // From number without "whatsapp:" prefix
   appointments Appointment[]
+  slots        Slot[]
   adminId      String?
   admin        Admin?           @relation(fields: [adminId], references: [id])
   createdAt    DateTime         @default(now())
@@ -46,7 +47,8 @@ model Appointment {
   updatedAt DateTime  @updatedAt
   adminId   String?   
   admin     Admin?    @relation(fields: [adminId], references: [id]) // Fixed case
-
+  slotId    String?
+  slot      Slot?     @relation(fields: [slotId], references: [id])
   @@index([userId])
   @@index([date])
 }
@@ -75,5 +77,6 @@ model Slot {
   date        DateTime?
   isBooked    Boolean  @default(false)
   userId      String?     // If booked, reference the user
-
+  user        User?     @relation(fields: [userId], references: [id])
+  appointment Appointment[]
 }

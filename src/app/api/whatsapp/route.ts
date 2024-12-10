@@ -89,6 +89,10 @@ export async function POST(req: NextRequest) {
             status: "CANCELLED",
             user,
           });
+          await prisma.slot.update({
+            where: { id: existingAppointment.slotId! },
+            data: { isBooked: false },
+          });
         } else {
           messageText = `⚠️ No active appointment found to cancel. Send "hi" to book an appointment.`;
         }
@@ -109,6 +113,7 @@ export async function POST(req: NextRequest) {
               userId: user.id,
               adminId: user.admin.id,
               status: "CONFIRMED",
+              slotId: selectedSlot.id
             },
           });
 
@@ -127,7 +132,7 @@ export async function POST(req: NextRequest) {
           });
         }
       } else {
-        messageText = `Please send "hi" to see available options.`;
+        messageText = `Please send "Hi" to see available options.`;
       }
     }
 

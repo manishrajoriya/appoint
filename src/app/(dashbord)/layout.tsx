@@ -14,17 +14,12 @@ export default function Layout({
   return (
     
       <html lang="en">
-        <ClerkProvider>
+        
         <body suppressHydrationWarning={true}>
-          <SignedOut>
-            <SignInButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
+         
           {children}
         </body>
-        </ClerkProvider>
+        
       </html>
      
   )

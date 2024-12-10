@@ -113,6 +113,7 @@ export async function notifyAdmin(appointment: any) {
     }
   });
 
+
   if (!admin || !admin.mobileNo || admin.mobileNo.length === 0) {
     console.error('Admin not found for appointment');
     return;
