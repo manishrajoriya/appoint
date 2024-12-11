@@ -5,6 +5,7 @@ import AdminAvailability from '@/components/forms/Availability'
 import DisplayAllSlots from '@/components/GetAllSlot'
 
 import React from 'react'
+import SlotManager from '../../../components/Generate'
 
 function page() {
   return (
@@ -13,6 +14,7 @@ function page() {
         <AdminAvailability/>
         <DefineAvailability/>
         <DisplayAllSlots/>
+        <SlotManager/>
     </div>
   )
 }

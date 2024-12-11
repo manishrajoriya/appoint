@@ -82,3 +82,47 @@ export async function getAllSlots() {
 
   return slots;
 }
+
+
+
+
+
+export async function generateSlotsForDate(dateString: string) {
+  const date = new Date(dateString); // Input: "YYYY-MM-DD"
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayOfWeek = days[date.getUTCDay()];
+
+  const config = await prisma.config.findUnique({ where: { day: dayOfWeek } });
+  if (!config) throw new Error(`No slot configuration found for ${dayOfWeek}`);
+
+  const { startTime, endTime, interval } = config;
+
+  // Parse time strings
+  const [startHour, startMinute] = startTime.split(":").map(Number);
+  const [endHour, endMinute] = endTime.split(":").map(Number);
+
+  const start = new Date(date);
+  start.setUTCHours(startHour, startMinute, 0, 0);
+
+  const end = new Date(date);
+  end.setUTCHours(endHour, endMinute, 0, 0);
+
+  // Generate slots
+  let current = start;
+  const slots = [];
+  while (current < end) {
+    const next = new Date(current.getTime() + interval * 60000); // Add interval
+    slots.push({
+      day: dayOfWeek,
+      startTime: current.toISOString(),
+      endTime: next.toISOString(),
+      date,
+    });
+    current = next;
+  }
+
+  // Save to database
+  await prisma.slot.createMany({ data: slots });
+
+  return { message: `Slots generated successfully for ${dayOfWeek}` };
+}

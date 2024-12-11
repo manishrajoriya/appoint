@@ -350,19 +350,6 @@ export async function connectToAdmin(data: FormData) {
           message: "No admin found with this unique name. Please check and try again."
         };
       }
-       // Fetch available slots for the admin
-      // const slots = await prisma.slot.findMany({
-      //   where: {
-      //     adminId: admin.id,
-      //     isBooked: false, // Assuming there's a field to indicate slot availability
-          
-      //   },
-        
-      // });
-
-      // const slotMessages = slots.map(slot => 
-      //   `${slot.startTime.toLocaleTimeString()} - ${slot.endTime.toLocaleTimeString()} `
-      // );
 
       // Connect user to admin
       await prisma.user.update({
@@ -413,7 +400,6 @@ export async function connectToAdmin(data: FormData) {
 export async function upcomingAppointments() {
   try {
     const {userId} = await auth()
-console.log(userId);
 
     if (!userId) {
       return {
@@ -423,22 +409,27 @@ console.log(userId);
       }
     }
 
+    
     const appointments = await prisma.appointment.findMany({
       where: {
-        adminId: userId
+        adminId: userId,
+        date: {
+          gte: new Date()
+        }
       },
      include: {
-      
       user: {
         select: {
           phone: true,
           name: true
         }
       }
-    }
+    },
+      orderBy: {
+        date: 'asc'
+      }
   })
-    console.log(appointments);
-    
+ 
     return {
       success: true,
       message: "Upcoming appointments fetched successfully",

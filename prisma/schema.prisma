@@ -72,6 +72,7 @@ model Slot {
   id          String      @id @default(cuid())
   adminId     String
   admin       Admin    @relation(fields: [adminId], references: [id])
+  day         String
   startTime   DateTime
   endTime     DateTime
   date        DateTime?
@@ -79,4 +80,12 @@ model Slot {
   userId      String?     // If booked, reference the user
   user        User?     @relation(fields: [userId], references: [id])
   appointment Appointment[]
+}
+
+model Config {
+  id        String   @id @default(cuid())
+  day       String   @unique // e.g., "Monday"
+  startTime String   // e.g., "09:00"
+  endTime   String   // e.g., "17:00"
+  interval  Int      // Time interval in minutes (e.g., 30)
 }
