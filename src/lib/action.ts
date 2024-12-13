@@ -39,6 +39,7 @@ type AdminFormState = {
   success?: boolean
   message?: string
 }
+
 export async function createAdmin(prevState: AdminFormState, formData: FormData): Promise<AdminFormState> {
   try {
 
@@ -100,7 +101,6 @@ export async function createAdmin(prevState: AdminFormState, formData: FormData)
     }
   }
 }
-
 
 
 export async function notifyAdmin(appointment: any) {
@@ -365,15 +365,12 @@ export async function connectToAdmin(data: FormData) {
         }
       });
 
-     
-
       return {
         success: true,
         message: `Now you can book an appointment with ${admin.name}.\nSend:\n Type 'hi' To book an appointment.`,
       };
     }
-      
-  
+
     // User exists and is connected to admin
     if (user.appointments && user.appointments.length > 0) {
       const appointment = user.appointments[0];
