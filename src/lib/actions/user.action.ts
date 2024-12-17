@@ -32,6 +32,7 @@ export async function defineAvailability({
       adminId : userId,
       startTime: currentStart,
       endTime: currentEnd,
+      day: currentStart.toDateString(),
     });
     currentStart = currentEnd;
   }
@@ -88,6 +89,11 @@ export async function getAllSlots() {
 
 
 export async function generateSlotsForDate(dateString: string) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized - Please sign in");
+  }
   const date = new Date(dateString); // Input: "YYYY-MM-DD"
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const dayOfWeek = days[date.getUTCDay()];
@@ -117,6 +123,7 @@ export async function generateSlotsForDate(dateString: string) {
       startTime: current.toISOString(),
       endTime: next.toISOString(),
       date,
+      adminId: userId,
     });
     current = next;
   }
