@@ -11,6 +11,8 @@ export default function PaymentForm() {
       const { data } = await axios.post("/api/create-order", {
         amount, // Amount in INR
         currency: "INR",
+        receipt: "receipt#1",
+        
       });
 
       const { id: order_id, amount: order_amount, currency } = data;
