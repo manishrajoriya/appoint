@@ -11,7 +11,7 @@ export default function PaymentForm() {
       const { data } = await axios.post("/api/create-order", {
         amount, // Amount in INR
         currency: "INR",
-        receipt: "receipt#1",
+        
         
       });
 
@@ -25,11 +25,11 @@ export default function PaymentForm() {
         name: "Your Website Name",
         description: "Test Transaction",
         order_id, // Order ID from the backend
-        handler: async function (response) {
+        handler: async function (response: any) {
           const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
-            response;
+            response; 
 
-          // Step 3: Verify payment on the server (optional but recommended)
+          //// Step 3: Verify payment on the server (optional but recommended)
           const verification = await axios.post("/api/verify-payment", {
             razorpay_payment_id,
             razorpay_order_id,
