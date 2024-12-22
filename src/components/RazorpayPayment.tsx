@@ -48,17 +48,17 @@ export default function PaymentForm() {
           contact: "9876543210",
         },
         notes: {
-          address: "Some Address",
+          address: "Some Address here",
         },
         theme: {
           color: "#3399cc",
         },
       };
 
-      const razorpay = new Razorpay(options);
+      const razorpay =  new Razorpay(options);
       razorpay.open();
     } catch (error) {
-      console.error("Payment failed:", error);
+      console.error("Payment failed: ", error);
     }
   };
 
@@ -68,9 +68,9 @@ export default function PaymentForm() {
         type="number"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        placeholder="Enter Amount"
+        placeholder="Enter Amount in INR (Rs.) to be paid to Razorpay API server to create an order and open Razorpay Checkout"
       />
-      <button onClick={handlePayment}>Pay Now</button>
+      <button onClick={handlePayment}>Pay Now - with Razorpay Checkout</button>
     </div>
   );
 }
