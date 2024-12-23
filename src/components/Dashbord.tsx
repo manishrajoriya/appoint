@@ -1,5 +1,5 @@
 "use client"
-import Layout from '@/components/DashbordLayout'
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -47,8 +47,8 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <Layout>
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 ">
+    
+  <div className="grid grid-cols-1  gap-4 ">
     <div className='lg:col-span-2'>
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
@@ -147,11 +147,8 @@ export default function Dashboard() {
     </Card>
   </div>
 
-     <div className='lg:col-span-1'>
-      <AdminTimeSlotsForm/>
-     </div>
-      </div>
-    </Layout>
+</div>
+    
   )
 }
 
