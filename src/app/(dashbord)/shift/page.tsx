@@ -25,6 +25,7 @@ export default function OwnerAvailability() {
     daysOfWeek.forEach(day => {
       initialAvailability[day] = []
     })
+    console.log(initialAvailability);
     return initialAvailability
   })
 

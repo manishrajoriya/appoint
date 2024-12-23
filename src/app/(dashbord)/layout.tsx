@@ -13,7 +13,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
+      {/* Sidebar */} 
       <div className="hidden border-r bg-card md:flex md:w-64 md:flex-col">
         <div className="flex flex-col space-y-4 p-4">
           <div className="flex h-14 items-center px-4 font-semibold tracking-tight">

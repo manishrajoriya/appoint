@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import { Phone } from 'lucide-react'
 import { Badge } from './ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
-import AdminTimeSlotsForm from './Timeslote'
+
 export default function Dashboard() {
   // const upcomingAppointments = [
   //   { id: 1, client: 'John Doe', date: 'May 15, 2023', time: '10:00 AM' },
