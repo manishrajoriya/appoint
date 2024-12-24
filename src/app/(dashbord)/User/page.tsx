@@ -1,17 +1,15 @@
 
 import Dashboard from '@/components/Dashbord'
-import DefineAvailability from '@/components/DefineAvailable'
-
-import DisplayAllSlots from '@/components/GetAllSlot'
 
 import React from 'react'
-import SlotManager from '../../../components/Generate'
+
+import PricingSection from '@/components/PricingSection'
 
 function page() {
   return (
     <div>
         <Dashboard/>
-
+        <PricingSection/>
     </div>
   )
 }

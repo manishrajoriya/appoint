@@ -26,7 +26,7 @@ console.log(amount, product, firstname, email, mobile);
     const data = await PayData.payuClient.paymentInitiate({
       isAmountFilledByCustomer: false,
       txnid: txn_id,
-      amount: amount.tonumber(),
+      amount: amount.toFixed(2),
       currency: "INR",
       productinfo: JSON.stringify(product),
       firstname: firstname,

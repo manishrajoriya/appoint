@@ -12,7 +12,7 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -51,6 +51,7 @@ export default function PaymentPage() {
         <div>
           <label className="block font-medium">Amount</label>
           <input
+           title="Amount should be in INR"
             type="number"
             name="amount"
             value={formData.amount}
@@ -62,6 +63,7 @@ export default function PaymentPage() {
         <div>
           <label className="block font-medium">Product Info</label>
           <input
+          title="Product Info"
             type="text"
             name="product"
             value={formData.product}
@@ -73,6 +75,7 @@ export default function PaymentPage() {
         <div>
           <label className="block font-medium">First Name</label>
           <input
+          title="First Name"
             type="text"
             name="firstname"
             value={formData.firstname}
@@ -84,6 +87,7 @@ export default function PaymentPage() {
         <div>
           <label className="block font-medium">Email</label>
           <input
+          title="Email"
             type="email"
             name="email"
             value={formData.email}
@@ -95,6 +99,7 @@ export default function PaymentPage() {
         <div>
           <label className="block font-medium">Mobile</label>
           <input
+          title="Mobile"
             type="text"
             name="mobile"
             value={formData.mobile}
