@@ -5,6 +5,7 @@ import { MobileNav } from "@/components/mobile-nav"
 import { UserNav } from "@/components/user-nav"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import Script from "next/script"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -12,6 +13,11 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
+    <body>
+      <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */} 
       <div className="hidden border-r bg-card md:flex md:w-64 md:flex-col">
@@ -54,6 +60,7 @@ export default function Layout({ children }: LayoutProps) {
         </footer>
       </div>
     </div>
+    </body>
   )
 }
 
