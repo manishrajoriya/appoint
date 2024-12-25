@@ -89,3 +89,31 @@ model Config {
   endTime   String   // e.g., "17:00"
   interval  Int      // Time interval in minutes (e.g., 30)
 }
+
+
+model Plan {
+  id          String   @id @default(uuid()) // Unique identifier
+  name        String   // Plan name (e.g., Basic, Pro, Enterprise)
+  price       Int      // Plan price in INR (e.g., 999, 1999)
+  description String   // Description of the plan
+  features    String[] // List of features (stored as an array)
+  createdAt   DateTime @default(now()) // Plan creation timestamp
+  updatedAt   DateTime @updatedAt
+  payments    Payment[] // One-to-many relationship with payments
+}
+
+model Payment {
+  id              String   @id @default(uuid()) // Unique identifier
+  orderId         String   @unique // Razorpay order ID
+  paymentId       String?  // Razorpay payment ID (null if payment failed)
+  signature       String?  // Razorpay signature for verification
+  amount          Int      // Amount paid in INR (e.g., 999, 1999)
+  currency        String   @default("INR") // Payment currency
+  status          String   // Payment status (e.g., "success", "failed")
+  customerName    String   // Customer's name
+  customerEmail   String   // Customer's email
+  customerContact String   // Customer's contact number
+  planId          String   // Foreign key to Plan
+  plan            Plan     @relation(fields: [planId], references: [id])
+  createdAt       DateTime @default(now()) // Payment creation timestamp
+}

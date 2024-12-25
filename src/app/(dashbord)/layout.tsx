@@ -13,7 +13,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <body>
+    <div>
       <Script
           src="https://checkout.razorpay.com/v1/checkout.js"
           strategy="lazyOnload"
@@ -60,7 +60,7 @@ export default function Layout({ children }: LayoutProps) {
         </footer>
       </div>
     </div>
-    </body>
+    </div>
   )
 }
 

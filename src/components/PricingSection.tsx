@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { createOrder } from '@/lib/actions/razorpay'
+import { createOrder, verifyPayment } from '@/lib/actions/razorpay'
 
 const plans = [
   {
@@ -29,6 +30,7 @@ const plans = [
 
 export default function Pricing() {
   const [loading, setLoading] = useState<string | null>(null)
+  const router = useRouter()
 
   const handlePayment = async (plan: typeof plans[0]) => {
     try {
@@ -38,6 +40,7 @@ export default function Pricing() {
       if (!response.success) {
         throw new Error('Failed to create order')
       }
+      console.log(response);
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -45,11 +48,26 @@ export default function Pricing() {
         currency: 'INR',
         name: 'Your Company Name',
         description: `${plan.name} Plan Subscription`,
-        order_id: response.order.id,
-        handler: function (response: any) {
-          console.log('Payment successful:', response)
-          // Handle successful payment here
-          alert('Payment successful!')
+        order_id: response.order?.id,
+        handler: async function (razorpayResponse: any) {
+          try {
+            const verificationResponse = await verifyPayment({
+              orderId: razorpayResponse.razorpay_order_id,
+              paymentId: razorpayResponse.razorpay_payment_id,
+              signature: razorpayResponse.razorpay_signature,
+            })
+
+            if (verificationResponse.success) {
+              console.log('Payment verified successfully:', verificationResponse)
+              router.push(`/success?paymentId=${razorpayResponse.razorpay_payment_id}&orderId=${razorpayResponse.razorpay_order_id}`)
+            } else {
+              console.error('Payment verification failed:', verificationResponse)
+              router.push(`/failure?errorCode=VERIFICATION_FAILED&errorDescription=${encodeURIComponent('Payment verification failed. Please contact support.')}`)
+            }
+          } catch (error) {
+            console.error('Error during payment verification:', error)
+            router.push(`/failure?errorCode=VERIFICATION_ERROR&errorDescription=${encodeURIComponent('Payment verification encountered an error. Please contact support.')}`)
+          }
         },
         prefill: {
           name: '',
@@ -62,10 +80,14 @@ export default function Pricing() {
       }
 
       const paymentObject = new (window as any).Razorpay(options)
+      paymentObject.on('payment.failed', function (response: any) {
+        console.error('Payment failed:', response.error)
+        router.push(`/failure?errorCode=${response.error.code}&errorDescription=${encodeURIComponent(response.error.description)}`)
+      })
       paymentObject.open()
     } catch (error) {
       console.error('Payment error:', error)
-      alert('Payment failed. Please try again.')
+      router.push(`/failure?errorCode=PAYMENT_ERROR&errorDescription=${encodeURIComponent('Payment failed. Please try again.')}`)
     } finally {
       setLoading(null)
     }

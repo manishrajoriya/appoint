@@ -32,14 +32,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-         <nav className="container mx-auto">
+         <div className="container mx-auto">
             <ul className="flex space-x-4">
               <li><a href="/" className="hover:text-gray-300">Home</a></li>
               <li><a href="/about" className="hover:text-gray-300">About Us</a></li>
               <li><a href="/contact" className="hover:text-gray-300">Contact Us</a></li>
               <li><a href="/pricing" className="hover:text-gray-300">Pricing</a></li>
             </ul>
-          </nav>
+          </div>
       </body>
       </ClerkProvider>
     </html>
