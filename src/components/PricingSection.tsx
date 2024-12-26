@@ -46,7 +46,7 @@ export default function Pricing() {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: plan.price * 100,
         currency: 'INR',
-        name: 'Your Company Name',
+        name: 'AtPoint',
         description: `${plan.name} Plan Subscription`,
         order_id: response.order?.id,
         handler: async function (razorpayResponse: any) {
