@@ -133,3 +133,98 @@ export async function generateSlotsForDate(dateString: string) {
 
   return { message: `Slots generated successfully for ${dayOfWeek}` };
 }
+
+
+
+export async function createTimeSlot({ day, slots }: { day: string; slots: { start: string; end: string }[] }) {
+  if (!day || !slots || !Array.isArray(slots) || slots.length === 0) {
+    throw new Error('Day and a valid array of time slots are required.');
+  }
+console.log("slots",slots, day);
+
+  const newTimeSlots = await prisma.$transaction(
+    slots.map(slot =>
+      prisma.timeSlot.create({
+        data: {
+          day,
+          start: slot.start,
+          end: slot.end,
+        },
+      })
+    )
+  );
+console.log("newTimeSlots",newTimeSlots);
+
+  return newTimeSlots;
+}
+
+// Delete a time slot
+export async function deleteTimeSlot(id: string) {
+  if (!id) {
+    throw new Error('ID is required to delete a time slot.');
+  }
+
+  await prisma.timeSlot.delete({
+    where: { id },
+  });
+  return { message: 'Time slot deleted successfully' };
+}
+
+// Update a time slot
+export async function updateTimeSlot(id: string, { start, end }: { start?: string; end?: string }) {
+  if (!id || (!start && !end)) {
+    throw new Error('ID and at least one field (start or end) are required to update a time slot.');
+  }
+
+  const updatedTimeSlot = await prisma.timeSlot.update({
+    where: { id },
+    data: {
+      ...(start && { start }),
+      ...(end && { end }),
+    },
+  });
+  return updatedTimeSlot;
+}
+
+interface Slot {
+  start: string;
+  end: string;
+}
+
+interface DayWithSlots {
+  name: string;
+  slots: Slot[];
+}
+
+// Server Action to store a day with its slots
+export async function storeDayWithSlots(data: DayWithSlots) {
+  try {
+    const { name, slots } = data;
+console.log(name, slots.map((slot) => ({ start: slot.start, end: slot.end })));
+
+    // Create or find the day
+    const day = await prisma.day.findUnique({
+      where: { name },
+     
+    });
+    if (!day) {
+      throw new Error('Day not found');
+    }
+console.log(day);
+
+    // Add slots to the day
+    await prisma.shift.createMany({
+      data: slots.map((slot) => ({
+        start: slot.start,
+        end: slot.end,
+        dayId: day.id,
+      })),
+    });
+
+    console.log('Day and slots saved successfully');
+    return { success: true, message: 'Day and slots saved successfully' };
+  } catch (error) {
+    console.error('Failed to save day and slots:', error);
+    return { success: false, message: 'Failed to save day and slots' };
+  }
+}

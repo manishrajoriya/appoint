@@ -1,46 +1,47 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
+import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
+
+import { createTimeSlot, deleteTimeSlot, storeDayWithSlots } from '@/lib/actions/user.action';
 
 type TimeSlot = {
-  id: string
-  start: string
-  end: string
-}
+  id: string;
+  start: string;
+  end: string;
+};
 
 type Availability = {
-  [key: string]: TimeSlot[]
-}
+  [key: string]: TimeSlot[];
+};
 
-const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function OwnerAvailability() {
   const [availability, setAvailability] = useState<Availability>(() => {
-    const initialAvailability: Availability = {}
+    const initialAvailability: Availability = {};
     daysOfWeek.forEach(day => {
-      initialAvailability[day] = []
-    })
-    console.log(initialAvailability);
-    return initialAvailability
-  })
+      initialAvailability[day] = [];
+    });
+    return initialAvailability;
+  });
 
-  const [selectedDay, setSelectedDay] = useState(daysOfWeek[0])
-  const [startTime, setStartTime] = useState('')
-  const [endTime, setEndTime] = useState('')
+  const [selectedDay, setSelectedDay] = useState(daysOfWeek[0]);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
 
-  const addTimeSlot = () => {
+  const addTimeSlot = async () => {
     if (!startTime || !endTime) {
       toast({
         title: "Error",
         description: "Please enter both start and end times.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     if (startTime >= endTime) {
@@ -48,46 +49,73 @@ export default function OwnerAvailability() {
         title: "Error",
         description: "End time must be after start time.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     const newSlot: TimeSlot = {
       id: Date.now().toString(),
       start: startTime,
       end: endTime,
+    };
+
+    try {
+      // await createTimeSlot({
+      //   day: selectedDay,
+      //   slots: [{ start: startTime, end: endTime }],
+      // });
+      await storeDayWithSlots({
+        name: selectedDay,
+        slots: [{ start: startTime, end: endTime }],
+      });
+
+      setAvailability(prev => ({
+        ...prev,
+        [selectedDay]: [...prev[selectedDay], newSlot],
+      }));
+
+      setStartTime('');
+      setEndTime('');
+
+      toast({
+        title: "Success",
+        description: "Time slot added successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add time slot. Please try again.",
+        variant: "destructive",
+      });
     }
+  };
 
-    setAvailability(prev => ({
-      ...prev,
-      [selectedDay]: [...prev[selectedDay], newSlot],
-    }))
+  const removeTimeSlot = async (day: string, id: string) => {
+    try {
+      await deleteTimeSlot(id);
 
-    setStartTime('')
-    setEndTime('')
+      setAvailability(prev => ({
+        ...prev,
+        [day]: prev[day].filter(slot => slot.id !== id),
+      }));
 
-    toast({
-      title: "Success",
-      description: "Time slot added successfully.",
-    })
-  }
-
-  const removeTimeSlot = (day: string, id: string) => {
-    setAvailability(prev => ({
-      ...prev,
-      [day]: prev[day].filter(slot => slot.id !== id),
-    }))
-
-    toast({
-      title: "Success",
-      description: "Time slot removed successfully.",
-    })
-  }
+      toast({
+        title: "Success",
+        description: "Time slot removed successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove time slot. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Set Your Availability</h2>
-      
+
       <div className="space-y-4">
         <Select onValueChange={setSelectedDay} defaultValue={selectedDay}>
           <SelectTrigger>
@@ -95,7 +123,9 @@ export default function OwnerAvailability() {
           </SelectTrigger>
           <SelectContent>
             {daysOfWeek.map(day => (
-              <SelectItem key={day} value={day}>{day}</SelectItem>
+              <SelectItem key={day} value={day}>
+                {day}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -134,9 +164,11 @@ export default function OwnerAvailability() {
               <ul className="space-y-2">
                 {availability[day].map(slot => (
                   <li key={slot.id} className="flex justify-between items-center">
-                    <span>{slot.start} - {slot.end}</span>
-                    <Button 
-                      variant="destructive" 
+                    <span>
+                      {slot.start} - {slot.end}
+                    </span>
+                    <Button
+                      variant="destructive"
                       size="sm"
                       onClick={() => removeTimeSlot(day, slot.id)}
                     >
@@ -150,6 +182,5 @@ export default function OwnerAvailability() {
         ))}
       </div>
     </div>
-  )
+  );
 }
-

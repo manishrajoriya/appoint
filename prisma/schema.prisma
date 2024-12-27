@@ -117,3 +117,25 @@ model Payment {
   plan            Plan     @relation(fields: [planId], references: [id])
   createdAt       DateTime @default(now()) // Payment creation timestamp
 }
+
+model TimeSlot {
+  id        String  @id @default(uuid())
+  start     String
+  end       String
+  day       String
+  
+}
+
+model Day {
+  id     Int       @id @default(autoincrement())
+  name   String    @unique // For the day, like 'Monday', 'Tuesday', etc.
+  shift  Shift[]    // Each day can have multiple time slots
+}
+
+model Shift {
+  id       Int    @id @default(autoincrement())
+  start    String // Start time of the slot
+  end      String // End time of the slot
+  dayId    Int    // Foreign key to reference the Day model
+  day      Day    @relation(fields: [dayId], references: [id]) // Relating the Slot to Day
+}

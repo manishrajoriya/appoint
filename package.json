@@ -2,6 +2,9 @@
   "name": "appoint",
   "version": "0.1.0",
   "private": true,
+   "prisma": {
+  "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+},
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,7 +13,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.7.1",
-    "@prisma/client": "^6.0.1",
+    "@prisma/client": "^6.1.0",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.4",
@@ -41,14 +44,15 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^20.17.9",
+    "@types/node": "^20.17.10",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "postcss": "^8",
-    "prisma": "^6.0.1",
+    "prisma": "^6.1.0",
     "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
