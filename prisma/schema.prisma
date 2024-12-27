@@ -32,6 +32,8 @@ model Admin {
   appointments   Appointment[]
   user           User[]
   slots          Slot[]
+  day            Day[]
+  payments       Payment[]
   adminAvailability AdminAvailability[]
   created_at     DateTime         @default(now())
 }
@@ -111,8 +113,10 @@ model Payment {
   currency        String   @default("INR") // Payment currency
   status          String   // Payment status (e.g., "success", "failed")
   customerName    String   // Customer's name
-  customerEmail   String   // Customer's email
-  customerContact String   // Customer's contact number
+  customerEmail   String?   // Customer's email
+  customerContact String?  // Customer's contact number
+  adminId         String
+  admin           Admin    @relation(fields: [adminId], references: [id])
   planId          String   // Foreign key to Plan
   plan            Plan     @relation(fields: [planId], references: [id])
   createdAt       DateTime @default(now()) // Payment creation timestamp
@@ -130,6 +134,10 @@ model Day {
   id     Int       @id @default(autoincrement())
   name   String    @unique // For the day, like 'Monday', 'Tuesday', etc.
   shift  Shift[]    // Each day can have multiple time slots
+  adminId String
+  admin  Admin     @relation(fields: [adminId], references: [id])
+
+  @@unique([name, adminId])
 }
 
 model Shift {

@@ -136,27 +136,7 @@ export async function generateSlotsForDate(dateString: string) {
 
 
 
-export async function createTimeSlot({ day, slots }: { day: string; slots: { start: string; end: string }[] }) {
-  if (!day || !slots || !Array.isArray(slots) || slots.length === 0) {
-    throw new Error('Day and a valid array of time slots are required.');
-  }
-console.log("slots",slots, day);
 
-  const newTimeSlots = await prisma.$transaction(
-    slots.map(slot =>
-      prisma.timeSlot.create({
-        data: {
-          day,
-          start: slot.start,
-          end: slot.end,
-        },
-      })
-    )
-  );
-console.log("newTimeSlots",newTimeSlots);
-
-  return newTimeSlots;
-}
 
 // Delete a time slot
 export async function deleteTimeSlot(id: string) {
@@ -196,15 +176,19 @@ interface DayWithSlots {
   slots: Slot[];
 }
 
-// Server Action to store a day with its slots
+
 export async function storeDayWithSlots(data: DayWithSlots) {
   try {
     const { name, slots } = data;
 console.log(name, slots.map((slot) => ({ start: slot.start, end: slot.end })));
+const { userId } = await auth();
 
+    if (!userId) {
+      throw new Error('Unauthorized - Please sign in');
+    }
     // Create or find the day
     const day = await prisma.day.findUnique({
-      where: { name },
+      where: { name, adminId: userId },
      
     });
     if (!day) {

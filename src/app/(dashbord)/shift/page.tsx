@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-
-import { createTimeSlot, deleteTimeSlot, storeDayWithSlots } from '@/lib/actions/user.action';
+import { createDays } from '@/lib/actions/time';
+import {  deleteTimeSlot, storeDayWithSlots } from '@/lib/actions/user.action';
 
 type TimeSlot = {
   id: string;
@@ -115,7 +115,9 @@ export default function OwnerAvailability() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Set Your Availability</h2>
-
+      <div>
+        <button onClick={createDays}>Create Days</button>
+      </div>
       <div className="space-y-4">
         <Select onValueChange={setSelectedDay} defaultValue={selectedDay}>
           <SelectTrigger>
