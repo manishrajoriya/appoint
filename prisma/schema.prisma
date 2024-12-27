@@ -34,6 +34,7 @@ model Admin {
   slots          Slot[]
   day            Day[]
   payments       Payment[]
+  shift          Shift[]
   adminAvailability AdminAvailability[]
   created_at     DateTime         @default(now())
 }
@@ -146,4 +147,6 @@ model Shift {
   end      String // End time of the slot
   dayId    Int    // Foreign key to reference the Day model
   day      Day    @relation(fields: [dayId], references: [id]) // Relating the Slot to Day
+  adminId  String
+  admin    Admin  @relation(fields: [adminId], references: [id])
 }

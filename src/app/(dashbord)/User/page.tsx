@@ -5,11 +5,13 @@ import React from 'react'
 
 import PricingSection from '@/components/PricingSection'
 
+
 function page() {
   return (
     <div>
         <Dashboard/>
         <PricingSection/>
+
     </div>
   )
 }

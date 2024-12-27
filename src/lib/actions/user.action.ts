@@ -186,9 +186,13 @@ const { userId } = await auth();
     if (!userId) {
       throw new Error('Unauthorized - Please sign in');
     }
+    const admin = await prisma.admin.findUnique({ where: { id: userId } });
+    if (!admin) {
+      throw new Error('Unauthorized - Please sign in as an admin');
+    }
     // Create or find the day
     const day = await prisma.day.findUnique({
-      where: { name, adminId: userId },
+      where: { name, adminId: admin.id },
      
     });
     if (!day) {
@@ -202,6 +206,7 @@ console.log(day);
         start: slot.start,
         end: slot.end,
         dayId: day.id,
+        adminId: admin.id
       })),
     });
 

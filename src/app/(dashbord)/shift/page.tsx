@@ -1,86 +1,94 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { createDays } from '@/lib/actions/time';
-import {  deleteTimeSlot, storeDayWithSlots } from '@/lib/actions/user.action';
+import { createDays, findAllDays, removeTimeSlot } from '@/lib/actions/time';
+import {  storeDayWithSlots } from '@/lib/actions/user.action';
 
+// Types
 type TimeSlot = {
   id: string;
   start: string;
   end: string;
 };
 
-type Availability = {
-  [key: string]: TimeSlot[];
+type DayShift = {
+  id: number;
+  name: string;
+  adminId: string;
+  shift: {
+    id: number;
+    start: string;
+    end: string;
+    adminId: string;
+    dayId: number;
+  }[];
 };
 
+// Constants
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function OwnerAvailability() {
-  const [availability, setAvailability] = useState<Availability>(() => {
-    const initialAvailability: Availability = {};
-    daysOfWeek.forEach(day => {
-      initialAvailability[day] = [];
-    });
-    return initialAvailability;
-  });
-
   const [selectedDay, setSelectedDay] = useState(daysOfWeek[0]);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const [slots, setSlots] = useState<DayShift[]>([]);
 
+  // Fetch time slots on mount
+  useEffect(() => {
+    async function fetchTimeSlots() {
+      try {
+        const slots = await findAllDays();
+        setSlots(slots);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch time slots.",
+          variant: "destructive",
+        });
+      }
+    }
+    fetchTimeSlots();
+  }, []);
+
+  // Add Time Slot
   const addTimeSlot = async () => {
     if (!startTime || !endTime) {
-      toast({
+      return toast({
         title: "Error",
         description: "Please enter both start and end times.",
         variant: "destructive",
       });
-      return;
     }
 
     if (startTime >= endTime) {
-      toast({
+      return toast({
         title: "Error",
         description: "End time must be after start time.",
         variant: "destructive",
       });
-      return;
     }
 
-    const newSlot: TimeSlot = {
-      id: Date.now().toString(),
-      start: startTime,
-      end: endTime,
-    };
-
     try {
-      // await createTimeSlot({
-      //   day: selectedDay,
-      //   slots: [{ start: startTime, end: endTime }],
-      // });
       await storeDayWithSlots({
         name: selectedDay,
         slots: [{ start: startTime, end: endTime }],
       });
-
-      setAvailability(prev => ({
-        ...prev,
-        [selectedDay]: [...prev[selectedDay], newSlot],
-      }));
-
-      setStartTime('');
-      setEndTime('');
+      // setStartTime('');
+      // setEndTime('');
 
       toast({
         title: "Success",
         description: "Time slot added successfully.",
       });
+
+      // Refresh slots
+      const updatedSlots = await findAllDays();
+      setSlots(updatedSlots);
     } catch (error) {
       toast({
         title: "Error",
@@ -90,19 +98,19 @@ export default function OwnerAvailability() {
     }
   };
 
-  const removeTimeSlot = async (day: string, id: string) => {
+  // Remove Time Slot
+  const removeTimeSlots = async (dayId:number, id:number, dayname:string) => {
     try {
-      await deleteTimeSlot(id);
-
-      setAvailability(prev => ({
-        ...prev,
-        [day]: prev[day].filter(slot => slot.id !== id),
-      }));
+      await removeTimeSlot(id, dayId, dayname);
 
       toast({
         title: "Success",
         description: "Time slot removed successfully.",
       });
+
+      // Refresh slots
+      const updatedSlots = await findAllDays();
+      setSlots(updatedSlots);
     } catch (error) {
       toast({
         title: "Error",
@@ -115,9 +123,13 @@ export default function OwnerAvailability() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Set Your Availability</h2>
+
+      {/* Create Days Button */}
       <div>
-        <button onClick={createDays}>Create Days</button>
+        <Button onClick={createDays}>Create Days</Button>
       </div>
+
+      {/* Day and Time Selection */}
       <div className="space-y-4">
         <Select onValueChange={setSelectedDay} defaultValue={selectedDay}>
           <SelectTrigger>
@@ -156,32 +168,36 @@ export default function OwnerAvailability() {
         <Button onClick={addTimeSlot}>Add Time Slot</Button>
       </div>
 
-      <div className="space-y-4">
-        {daysOfWeek.map(day => (
-          <div key={day} className="border p-4 rounded-md">
-            <h3 className="font-semibold mb-2">{day}</h3>
-            {availability[day].length === 0 ? (
-              <p className="text-sm text-gray-500">No time slots set</p>
-            ) : (
-              <ul className="space-y-2">
-                {availability[day].map(slot => (
-                  <li key={slot.id} className="flex justify-between items-center">
-                    <span>
-                      {slot.start} - {slot.end}
-                    </span>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeTimeSlot(day, slot.id)}
-                    >
-                      Remove
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
+      {/* Display Slots */}
+      <div>
+        <h2 className="text-2xl font-bold">Your Availability</h2>
+        <div className="space-y-4">
+          {slots.map((day) => (
+            <div key={day.id} className="border p-4 rounded-md">
+              <h3 className="font-semibold mb-2">{day.name}</h3>
+              {day.shift.length === 0 ? (
+                <p className="text-sm text-gray-500">No time slots set</p>
+              ) : (
+                <ul className="space-y-2">
+                  {day.shift.map((slot) => (
+                    <li key={slot.id} className="flex justify-between items-center">
+                      <span>
+                        {slot.start} - {slot.end}
+                      </span>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeTimeSlots(day.id, slot.id, day.name)}
+                      >
+                        Remove
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
