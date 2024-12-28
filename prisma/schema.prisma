@@ -106,21 +106,22 @@ model Plan {
 }
 
 model Payment {
-  id              String   @id @default(uuid()) // Unique identifier
-  orderId         String   @unique // Razorpay order ID
-  paymentId       String?  // Razorpay payment ID (null if payment failed)
-  signature       String?  // Razorpay signature for verification
-  amount          Int      // Amount paid in INR (e.g., 999, 1999)
-  currency        String   @default("INR") // Payment currency
-  status          String   // Payment status (e.g., "success", "failed")
-  customerName    String   // Customer's name
-  customerEmail   String?   // Customer's email
-  customerContact String?  // Customer's contact number
-  adminId         String
-  admin           Admin    @relation(fields: [adminId], references: [id])
-  planId          String   // Foreign key to Plan
-  plan            Plan     @relation(fields: [planId], references: [id])
-  createdAt       DateTime @default(now()) // Payment creation timestamp
+  id            String   @id @default(cuid())
+  razorpayId    String   @unique // Razorpay Payment ID
+  amount        Int      // Amount in paise
+  currency      String
+  status        String
+  method        String?
+  description   String?
+  email         String?
+  contact       String?
+  planId        String
+  plan          Plan     @relation(fields: [planId], references: [id])
+  adminId       String
+  admin         Admin    @relation(fields: [adminId], references: [id])
+  eventType     String   // Event type (e.g., payment.created, payment.failed)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model TimeSlot {
