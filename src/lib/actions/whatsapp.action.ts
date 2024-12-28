@@ -26,3 +26,19 @@ import { prisma } from "../prisma";
 
 //   return slots;
 // }
+
+export async function getDaySlotsWhatsapp({ adminId, dayName }: { adminId: string, dayName:string} ) {
+  const day = await prisma.day.findMany({
+    where: {
+      adminId: adminId,
+      name: dayName,
+    },
+    include: {
+      shift: true,
+    },
+    
+    });
+
+    return day;
+}
+
