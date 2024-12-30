@@ -5,7 +5,7 @@ import { CheckCircle, CreditCard, Calendar, Hash } from 'lucide-react'
 export default function PaymentDashboard() {
   // Mock data for the payment details
   const paymentDetails = {
-    amount: "$99.99",
+    amount: "₹999",
     date: "2023-12-29",
     transactionId: "TRX123456789",
     paymentMethod: "Visa **** 1234",
