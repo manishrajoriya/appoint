@@ -2,9 +2,9 @@
   "name": "appoint",
   "version": "0.1.0",
   "private": true,
-   "prisma": {
-  "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
-},
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -29,6 +29,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "express": "^4.21.1",
+    "googleapis": "^144.0.0",
     "localtunnel": "^2.0.2",
     "lucide-react": "^0.465.0",
     "next": "15.0.3",

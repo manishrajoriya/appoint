@@ -1,6 +1,7 @@
 "use client";
 import React from 'react'
 import { getDaySlotsWhatsapp } from '@/lib/actions/whatsapp.action'
+import GoogleCalenderHome from '@/components/GoogleCalenderHome';
 
 function page() {
    async function getSlots(){
@@ -12,6 +13,7 @@ function page() {
         <button
             onClick={getSlots}
         >get slots</button>
+        <GoogleCalenderHome/>
     </div>
   )
 }
