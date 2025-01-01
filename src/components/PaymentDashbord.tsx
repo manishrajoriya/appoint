@@ -9,7 +9,7 @@ export default function PaymentDashboard() {
     date: "2023-12-29",
     transactionId: "TRX123456789",
     paymentMethod: "Visa **** 1234",
-    status: "Successful"
+    status: "Successful Payment",
   }
 
   return (
