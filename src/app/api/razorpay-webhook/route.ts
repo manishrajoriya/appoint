@@ -49,16 +49,16 @@ export async function POST(req: Request) {
     console.log(`Handling event: ${event}`);
 
     // 📝 Validate Plan Reference
-    // if (order_id) {
-    //   const existingPlan = await prisma.plan.findUnique({
-    //     where: { id: order_id }
-    //   });
+    if (order_id) {
+      const existingPlan = await prisma.plan.findUnique({
+        where: { id: order_id }
+      });
 
-    //   if (!existingPlan) {
-    //     console.error(`Plan ID '${order_id}' does not exist.`);
-    //     return NextResponse.json({ error: 'Invalid Plan ID' }, { status: 400 });
-    //   }
-    // }
+      if (!existingPlan) {
+        console.error(`Plan ID '${order_id}' does not exist.`);
+        return NextResponse.json({ error: 'Invalid Plan ID' }, { status: 400 });
+      }
+    }
 
     // 💾 Upsert Payment Record
     await prisma.payment.upsert({
