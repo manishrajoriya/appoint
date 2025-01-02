@@ -1,65 +1,95 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
-import { auth } from '@clerk/nextjs/server';
 
-const secret = "NEETMBBS2@23"
+const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || 'NEETMBBS2@23';
 
-if (!secret) {
+if (!RAZORPAY_WEBHOOK_SECRET) {
   throw new Error('RAZORPAY_WEBHOOK_SECRET is not set in environment variables.');
 }
 
 export async function POST(req: Request) {
   try {
-    const body = await req.text();
+    // 🛡️ Validate Webhook Signature
+    const rawBody = await req.text();
     const signature = req.headers.get('x-razorpay-signature') || '';
 
-    const generatedSignature = crypto.createHmac('sha256', secret).update(body).digest('hex');
+    const generatedSignature = crypto
+      .createHmac('sha256', RAZORPAY_WEBHOOK_SECRET)
+      .update(rawBody)
+      .digest('hex');
 
     if (generatedSignature !== signature) {
       console.error(`Invalid signature: Expected ${generatedSignature}, got ${signature}`);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
-    const payload = JSON.parse(body);
+    // 📦 Parse Payload
+    const payload = JSON.parse(rawBody);
     const event = payload.event;
-    const payment = payload.payload.payment?.entity;
+    const payment = payload.payload.payment?.entity || {};
 
-    console.log('payment', payment);
+    const {
+      id,
+      amount,
+      currency,
+      status,
+      method,
+      description,
+      email,
+      contact,
+      order_id,
+    } = payment;
 
-    if (payment) {
-      const { id, amount, currency, status, method, description, email, contact, order_id } = payment;
-
-      await prisma.payment.upsert({
-        where: { razorpayId: id },
-        update: {
-          amount,
-          currency,
-          status,
-          method: method || null,
-          description: description || null,
-          email: email || null,
-          contact: contact || null,
-          eventType: event,
-        },
-        create: {
-          razorpayId: id,
-          amount,
-          currency,
-          status,
-          method: method || null,
-          description: description || null,
-          email: email || null,
-          contact: contact || null,
-          eventType: event,
-          adminId: "user_2q920IGfrn8NcalWA4goAmolFLF",
-          planId: order_id,
-        },
-      });
-
-      console.log(`Payment event '${event}' handled and stored successfully: ${id}`);
+    if (!id) {
+      console.error('Payment ID is missing from the payload');
+      return NextResponse.json({ error: 'Invalid payment payload' }, { status: 400 });
     }
 
+    console.log(`Handling event: ${event}`);
+
+    // 📝 Validate Plan Reference
+    // if (order_id) {
+    //   const existingPlan = await prisma.plan.findUnique({
+    //     where: { id: order_id }
+    //   });
+
+    //   if (!existingPlan) {
+    //     console.error(`Plan ID '${order_id}' does not exist.`);
+    //     return NextResponse.json({ error: 'Invalid Plan ID' }, { status: 400 });
+    //   }
+    // }
+
+    // 💾 Upsert Payment Record
+    await prisma.payment.upsert({
+      where: { razorpayId: id },
+      update: {
+        amount,
+        currency,
+        status,
+        method: method || null,
+        description: description || null,
+        email: email || null,
+        contact: contact || null,
+        eventType: event,
+        planId: order_id || null,
+      },
+      create: {
+        razorpayId: id,
+        amount,
+        currency,
+        status,
+        method: method || null,
+        description: description || null,
+        email: email || null,
+        contact: contact || null,
+        eventType: event,
+        adminId: "user_2q920IGfrn8NcalWA4goAmolFLF",
+        planId: "order_PeF8LqeG6dg7V9",
+      },
+    });
+
+    // 🔄 Handle Different Payment Events
     switch (event) {
       case 'payment.created':
         console.log('Payment Created:', payment);
@@ -78,8 +108,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ status: 'success' });
-  } catch (error) {
-    console.error('Error handling webhook:', error);
+  } catch (error: any) {
+    console.error('Error handling webhook:', error.message || error, error.stack || '');
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
