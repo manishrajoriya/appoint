@@ -11,21 +11,21 @@ const plans = [
   {
     name: 'Basic',
     price: 999,
-    order_id: 'plan_1',
+    plan_id: 'plan_1',
     description: 'Perfect for small businesses',
     features: ['Up to 5 users', '10GB storage', 'Basic support', 'Basic analytics'],
   },
   {
     name: 'Pro',
     price: 1999,
-    order_id: 'plan_2',
+    plan_id: 'plan_2',
     description: 'Great for growing teams',
     features: ['Up to 20 users', '50GB storage', 'Priority support', 'Advanced analytics'],
   },
   {
     name: 'Enterprise',
     price: 4999,
-    order_id: 'plan_3',
+    plan_id: 'plan_3',
     description: 'For large organizations',
     features: ['Unlimited users', '500GB storage', '24/7 support', 'Custom analytics'],
   },
@@ -61,6 +61,7 @@ export default function Pricing() {
         currency: 'INR',
         name: 'AtPoint',
         description: `${plan.name} Plan Subscription`,
+        plan_id: plan.plan_id,
         order_id: response.order?.id,
         handler: async function (razorpayResponse: any) {
           try {
@@ -83,9 +84,9 @@ export default function Pricing() {
           }
         },
         prefill: {
-          name: '',
-          email: '',
-          contact: '',
+          name: 'manish kumar',
+          email: 'gkrajoriya3@mail.com',
+          contact: '3455678901',
         },
         theme: {
           color: '#0F172A',
