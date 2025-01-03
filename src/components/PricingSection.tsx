@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,18 +11,21 @@ const plans = [
   {
     name: 'Basic',
     price: 999,
+    order_id: 'plan_1',
     description: 'Perfect for small businesses',
     features: ['Up to 5 users', '10GB storage', 'Basic support', 'Basic analytics'],
   },
   {
     name: 'Pro',
     price: 1999,
+    order_id: 'plan_2',
     description: 'Great for growing teams',
     features: ['Up to 20 users', '50GB storage', 'Priority support', 'Advanced analytics'],
   },
   {
     name: 'Enterprise',
     price: 4999,
+    order_id: 'plan_3',
     description: 'For large organizations',
     features: ['Unlimited users', '500GB storage', '24/7 support', 'Custom analytics'],
   },
@@ -31,6 +34,16 @@ const plans = [
 export default function Pricing() {
   const [loading, setLoading] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
+    document.body.appendChild(script)
+    return () => {
+      document.body.removeChild(script)
+    }
+  }, [])
 
   const handlePayment = async (plan: typeof plans[0]) => {
     try {
