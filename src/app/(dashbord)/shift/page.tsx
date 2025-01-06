@@ -9,12 +9,6 @@ import { toast } from "@/components/ui/use-toast";
 import { createDays, findAllDays, removeTimeSlot } from '@/lib/actions/time';
 import {  storeDayWithSlots } from '@/lib/actions/user.action';
 
-// Types
-type TimeSlot = {
-  id: string;
-  start: string;
-  end: string;
-};
 
 type DayShift = {
   id: number;
@@ -95,6 +89,7 @@ export default function OwnerAvailability() {
         description: "Failed to add time slot. Please try again.",
         variant: "destructive",
       });
+      console.error('Failed to add time slot:', error);
     }
   };
 
@@ -117,6 +112,7 @@ export default function OwnerAvailability() {
         description: "Failed to remove time slot. Please try again.",
         variant: "destructive",
       });
+      console.error('Failed to remove time slot:', error);
     }
   };
 

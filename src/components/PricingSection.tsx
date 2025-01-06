@@ -6,6 +6,7 @@ import { Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { createOrder, verifyPayment } from '@/lib/actions/razorpay'
+import Razorpay from 'razorpay'
 
 const plans = [
   {
@@ -63,7 +64,7 @@ export default function Pricing() {
         description: `${plan.name} Plan Subscription`,
         plan_id: plan.plan_id,
         order_id: response.order?.id,
-        handler: async function (razorpayResponse: any) {
+        handler: async function (razorpayResponse: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) {
           try {
             const verificationResponse = await verifyPayment({
               orderId: razorpayResponse.razorpay_order_id,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { RazorpayError } from '@/types/razorpay';
 
 const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || 'NEETMBBS2@23';
 
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ status: 'success' });
-  } catch (error: any) {
+  } catch (error: RazorpayError| any) {
     console.error('Error handling webhook:', error.message || error, error.stack || '');
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

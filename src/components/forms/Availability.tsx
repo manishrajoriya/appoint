@@ -5,16 +5,16 @@ import { saveAvailability, fetchAvailability } from "@/lib/action";
 
 const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-type fetchedAvailability = {
-    startTime: string;
-    endTime: string;
-    id: string;
-    adminId: string;
-    dayOfWeek: number;
-    timeSlots: string[];
-    createdAt: Date;
-    updatedAt: Date;
-}
+// type fetchedAvailability = {
+//     startTime: string;
+//     endTime: string;
+//     id: string;
+//     adminId: string;
+//     dayOfWeek: number;
+//     timeSlots: string[];
+//     createdAt: Date;
+//     updatedAt: Date;
+// }
 
 export default function AdminAvailability() {
   const [availability, setAvailability] = useState<{ dayOfWeek: number; startTime: string; endTime: string }[]>([]);

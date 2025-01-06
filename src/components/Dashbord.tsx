@@ -1,8 +1,6 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import { upcomingAppointments } from '@/lib/action'
 import { useEffect, useState } from 'react'
 import { Phone } from 'lucide-react'

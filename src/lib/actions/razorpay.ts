@@ -1,6 +1,5 @@
 'use server'
 
-import { RazorpayPayment } from '@/types/razorpay'
 import Razorpay from 'razorpay'
 import crypto from 'crypto'
 
