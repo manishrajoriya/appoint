@@ -5,8 +5,6 @@ import { prisma } from "./prisma";
 import { twilioClient } from "./twilio";
 
 
-
-
 export async function getOrCreateUser(formData: FormData) {
   const waId = formData.get('WaId')?.toString() || '';
   const profileName = formData.get('ProfileName')?.toString() || '';
